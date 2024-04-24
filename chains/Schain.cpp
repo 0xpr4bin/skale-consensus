@@ -296,6 +296,11 @@ Schain::Schain( weak_ptr< Node > _node, schain_index _schainIndex, const schain_
                 getNode()->getPatchTimestamps().at( "verifyDaSigsPatchTimestamp" );
         }
 
+        if ( getNode()->getPatchTimestamps().count( "verifyBlsSyncPatchTimestamp" ) > 0 ) {
+            this->verifyBlsSyncPatchTimestampS =
+                getNode()->getPatchTimestamps().at( "verifyBlsSyncPatchTimestamp" );
+        }
+
     } catch ( ExitRequestedException& ) {
         throw;
     } catch ( ... ) {
@@ -436,6 +441,9 @@ bool Schain::verifyDASigsPatch( uint64_t _blockTimeStampS ) {
     return verifyDaSigsPatchTimestampS != 0 && _blockTimeStampS >= verifyDaSigsPatchTimestampS;
 }
 
+bool Schain::verifyBlsSyncPatch( uint64_t _blockTimeStampS ) {
+    return verifyBlsSyncPatchTimestampS != 0 && _blockTimeStampS >= verifyBlsSyncPatchTimestampS;
+}
 
 void Schain::blockCommitArrived( block_id _committedBlockID, schain_index _proposerIndex,
     const ptr< ThresholdSignature >& _thresholdSig, ptr< ThresholdSignature > _daSig ) {
@@ -1461,11 +1469,14 @@ void Schain::analyzeErrors( ptr< CommittedBlock > _block ) {
         analyzer->analyze( _block );
     }
 }
+
 uint64_t Schain::getVerifyDaSigsPatchTimestampS() const {
     return verifyDaSigsPatchTimestampS;
 }
 
-
+uint64_t Schain::getVerifyBlsSyncPatchTimestampS() const {
+    return verifyBlsSyncPatchTimestampS;
+}
 
 
 mutex Schain::vdsMutex;

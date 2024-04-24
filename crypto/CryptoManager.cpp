@@ -754,10 +754,14 @@ void CryptoManager::verifyBlockSig(
         }
 
         if ( verifyRealSignatures ) {
-            auto _signature = make_shared< ConsensusBLSSignature >(
-                _sigStr, _blockId, totalSigners, requiredSigners );
+            if ( !getSchain()->getNode()->isSyncOnlyNode() ||
+                 ( getSchain()->getNode()->isSyncOnlyNode() &&
+                   getSchain()->verifyBlsSyncPatch( _ts.getS() ) ) ) {
+                auto _signature = make_shared< ConsensusBLSSignature >(
+                    _sigStr, _blockId, totalSigners, requiredSigners );
 
-            verifyThresholdSig( _signature, _hash, _ts );
+                verifyThresholdSig( _signature, _hash, _ts );
+            }
         }
 
     } catch ( ... ) {

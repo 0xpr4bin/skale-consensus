@@ -177,6 +177,8 @@ class Schain : public Agent {
 
     uint64_t verifyDaSigsPatchTimestampS = 0;
 
+    uint64_t verifyBlsSyncPatchTimestampS = 0;
+
     // If a BlockError analyzer is added to the queue
     // its analyze(CommittedBlock _block) function will be run on commit
     // and then t will be removed from the queue
@@ -344,9 +346,9 @@ public:
 
     ptr< CryptoManager > getCryptoManager() const;
 
-
     uint64_t getVerifyDaSigsPatchTimestampS() const;
 
+    uint64_t getVerifyBlsSyncPatchTimestampS() const;
 
     bool isInCreateBlock() const;
 
@@ -385,6 +387,8 @@ public:
     const atomic< bool >& getIsStateInitialized() const;
 
     bool verifyDASigsPatch( uint64_t _blockTimeStampSec );
+
+    bool verifyBlsSyncPatch( uint64_t _blockTimeStampSec );
 
     void updateInternalChainInfo( block_id _lastCommittedBlockID );
 

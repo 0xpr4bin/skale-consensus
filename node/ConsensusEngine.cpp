@@ -1078,6 +1078,10 @@ void ConsensusEngine::setRotationHistory( ptr< map< uint64_t, vector< string > >
         make_shared< map< uint64_t, ptr< BLSPublicKey > > >( _previousBlsPublicKeys );
     historicECDSAPublicKeys = _historicECDSAKeys;
     historicNodeGroups = _historicNodeGroups;
+
+    // initialize for the sync nodes
+    if ( !blsPublicKey && _previousBlsPublicKeys.size() )
+        blsPublicKey = _previousBlsPublicKeys.rbegin()->second;
 }
 
 const string ConsensusEngine::getEcdsaKeyName() const {

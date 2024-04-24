@@ -884,7 +884,8 @@ void CryptoManager::verifyThresholdSig(
 
         MONITOR( __CLASS_NAME__, __FUNCTION__ )
 
-        if ( verifyRealSignatures ) {
+        if ( verifyRealSignatures && ( !getSchain()->getNode()->isSyncOnlyNode() ||
+                                       getSchain()->verifyBlsSyncPatch( _ts.getS() ) ) ) {
             auto blsSig = dynamic_pointer_cast< ConsensusBLSSignature >( _signature );
 
             CHECK_STATE( blsSig );

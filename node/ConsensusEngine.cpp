@@ -1039,26 +1039,26 @@ void ConsensusEngine::setPublicKeyInfo( ptr< vector< string > >& _ecdsaPublicKey
     CHECK_STATE( _totalSigners >= _requiredSigners );
 
 
-    this->blsPublicKeys = _blsPublicKeyShares;
     this->ecdsaPublicKeys = _ecdsaPublicKeys;
+    if ( _blsPublicKeyShares ) {
+        // not the case for the sync nodes
+        this->blsPublicKeys = _blsPublicKeyShares;
 
+        map< size_t, shared_ptr< BLSPublicKeyShare > > blsPubKeyShares;
+        for ( uint64_t i = 0; i < _requiredSigners; i++ ) {
+            LOG( info, "Parsing BLS key share:" << blsPublicKeys->at( i )->at( 0 ) );
 
-    map< size_t, shared_ptr< BLSPublicKeyShare > > blsPubKeyShares;
+            BLSPublicKeyShare pubKey( blsPublicKeys->at( i ), _requiredSigners, _totalSigners );
 
+            blsPubKeyShares[i + 1] = make_shared< BLSPublicKeyShare >( pubKey );
+        }
 
-    for ( uint64_t i = 0; i < _requiredSigners; i++ ) {
-        LOG( info, "Parsing BLS key share:" << blsPublicKeys->at( i )->at( 0 ) );
+        // create pub key
 
-        BLSPublicKeyShare pubKey( blsPublicKeys->at( i ), _requiredSigners, _totalSigners );
-
-        blsPubKeyShares[i + 1] = make_shared< BLSPublicKeyShare >( pubKey );
+        blsPublicKey = make_shared< BLSPublicKey >(
+            make_shared< map< size_t, shared_ptr< BLSPublicKeyShare > > >( blsPubKeyShares ),
+            _requiredSigners, _totalSigners );
     }
-
-    // create pub key
-
-    blsPublicKey = make_shared< BLSPublicKey >(
-        make_shared< map< size_t, shared_ptr< BLSPublicKeyShare > > >( blsPubKeyShares ),
-        _requiredSigners, _totalSigners );
 }
 
 

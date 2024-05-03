@@ -1032,7 +1032,7 @@ void ConsensusEngine::setSGXKeyInfo( const string& _sgxServerURL, string& _sgxSS
 
 void ConsensusEngine::setPublicKeyInfo( ptr< vector< string > >& _ecdsaPublicKeys,
     ptr< vector< ptr< vector< string > > > >& _blsPublicKeyShares, uint64_t _requiredSigners,
-    uint64_t _totalSigners ) {
+    uint64_t _totalSigners, bool _isSyncNode ) {
     CHECK_STATE( _blsPublicKeyShares );
     CHECK_STATE( _ecdsaPublicKeys );
     CHECK_STATE( _ecdsaPublicKeys );
@@ -1040,10 +1040,9 @@ void ConsensusEngine::setPublicKeyInfo( ptr< vector< string > >& _ecdsaPublicKey
 
 
     this->ecdsaPublicKeys = _ecdsaPublicKeys;
-    if ( _blsPublicKeyShares ) {
-        // not the case for the sync nodes
-        this->blsPublicKeys = _blsPublicKeyShares;
+    this->blsPublicKeys = _blsPublicKeyShares;
 
+    if ( !_isSyncNode ) {
         map< size_t, shared_ptr< BLSPublicKeyShare > > blsPubKeyShares;
         for ( uint64_t i = 0; i < _requiredSigners; i++ ) {
             LOG( info, "Parsing BLS key share:" << blsPublicKeys->at( i )->at( 0 ) );

@@ -912,9 +912,6 @@ void CryptoManager::verifyThresholdSig(
                         make_shared< array< uint8_t, HASH_LEN > >( _hash.getHash() ), libBlsSig ),
                     "BLS sig verification failed using both current and previous key" );
             }
-            if ( verifyRealSignatures && getSchain()->getNode()->isSyncOnlyNode() && getSchain()->verifyBlsSyncPatch( _ts.getS() ) )
-                LOG( info, "Signature was verified for sync node." );
-
         } else {
             // mockups sigs are not verified
         }

@@ -84,6 +84,7 @@
 #include "messages/NetworkMessageEnvelope.h"
 #include "monitoring/MonitoringAgent.h"
 #include "monitoring/StuckDetectionAgent.h"
+#include "monitoring/OptimizerAgent.h"
 #include "network/ClientSocket.h"
 #include "network/IO.h"
 #include "network/Sockets.h"
@@ -241,6 +242,7 @@ Schain::Schain( weak_ptr< Node > _node, schain_index _schainIndex, const schain_
       node( _node ),
       schainIndex( _schainIndex ) {
     lastCommittedBlockTimeStamp = TimeStamp( 0, 0 );
+    setTimeStampValuesFromConfig();
 
     // construct monitoring, timeout and stuck detection agents early
     monitoringAgent = make_shared< MonitoringAgent >( *this );
@@ -290,17 +292,6 @@ Schain::Schain( weak_ptr< Node > _node, schain_index _schainIndex, const schain_
 
         getNode()->registerAgent( this );
 
-
-        if ( getNode()->getPatchTimestamps().count( "verifyDaSigsPatchTimestamp" ) > 0 ) {
-            this->verifyDaSigsPatchTimestampS =
-                getNode()->getPatchTimestamps().at( "verifyDaSigsPatchTimestamp" );
-        }
-
-        if ( getNode()->getPatchTimestamps().count( "verifyBlsSyncPatchTimestamp" ) > 0 ) {
-            this->verifyBlsSyncPatchTimestampS =
-                getNode()->getPatchTimestamps().at( "verifyBlsSyncPatchTimestamp" );
-        }
-
     } catch ( ExitRequestedException& ) {
         throw;
     } catch ( ... ) {
@@ -314,6 +305,7 @@ void Schain::constructChildAgents() {
     MONITOR( __CLASS_NAME__, __FUNCTION__ )
 
     try {
+        optimizerAgent = make_shared< OptimizerAgent >( *this );
         oracleResultAssemblyAgent = make_shared< OracleResultAssemblyAgent >( *this );
         pricingAgent = make_shared< PricingAgent >( *this );
         catchupClientAgent = make_shared< CatchupClientAgent >( *this );
@@ -438,11 +430,11 @@ const atomic< bool >& Schain::getIsStateInitialized() const {
 }
 
 bool Schain::verifyDASigsPatch( uint64_t _blockTimeStampS ) {
-    return verifyDaSigsPatchTimestampS != 0 && _blockTimeStampS >= verifyDaSigsPatchTimestampS;
+    return verifyDaSigsPatchTimestamp != 0 && _blockTimeStampS >= verifyDaSigsPatchTimestamp;
 }
 
 bool Schain::verifyBlsSyncPatch( uint64_t _blockTimeStampS ) {
-    return verifyBlsSyncPatchTimestampS != 0 && _blockTimeStampS >= verifyBlsSyncPatchTimestampS;
+    return verifyBlsSyncPatchTimestamp != 0 && _blockTimeStampS >= verifyBlsSyncPatchTimestamp;
 }
 
 void Schain::blockCommitArrived( block_id _committedBlockID, schain_index _proposerIndex,
@@ -555,6 +547,13 @@ void Schain::proposeNextBlock( bool _isCalledAfterCatchup ) {
 
 
         proposedBlockArrived( myProposal );
+
+        if (getOptimizerAgent()->skipSendingProposalToTheNetwork(_proposedBlockID)) {
+            // a node skips sending and saving its proposal during
+            // optimized block consensus, if the node was not a winner
+            // last time
+            return; // dont propose
+        }
 
         LOG( debug, "PROPOSING BLOCK NUMBER:" << to_string( _proposedBlockID ) );
 
@@ -899,7 +898,10 @@ void Schain::daProofArrived( const ptr< DAProof >& _daProof ) {
         if ( _daProof->getBlockId() <= getLastCommittedBlockID() )
             return;
 
-        auto pv = getNode()->getDaProofDB()->addDAProof( _daProof );
+        // this will add the DAProof to DB. If there are enough DAProofs in DB
+        // to start binary consensus, this will return binary proposal vector of 1s and 0s
+        auto pv =
+            addDAProofToDBAndCalculateProposalVectorIfItsTimeToStartBinaryConsensus( _daProof );
 
 
         if ( pv != nullptr ) {
@@ -1469,14 +1471,62 @@ void Schain::analyzeErrors( ptr< CommittedBlock > _block ) {
         analyzer->analyze( _block );
     }
 }
-
-uint64_t Schain::getVerifyDaSigsPatchTimestampS() const {
-    return verifyDaSigsPatchTimestampS;
+uint64_t Schain::getVerifyDaSigsPatchTimeStamp() const {
+    return verifyDaSigsPatchTimestamp;
 }
 
 uint64_t Schain::getVerifyBlsSyncPatchTimestampS() const {
-    return verifyBlsSyncPatchTimestampS;
+    return verifyBlsSyncPatchTimestamp;
 }
 
 
 mutex Schain::vdsMutex;
+
+// this function is called on arrival of each DA proof
+// if it is time to make binary proposals it will return a vector of 0s and 1s
+// for normal consensus it will happen when 2t+1 DA proofs  arrive (which is 11)
+// for optimized consensus it will happen when a DA proof from the previous winner arrives
+ptr<BooleanProposalVector>
+Schain::addDAProofToDBAndCalculateProposalVectorIfItsTimeToStartBinaryConsensus(
+    const ptr<DAProof> &_daProof) {
+
+    ptr<BooleanProposalVector> pv;
+
+    if (getOptimizerAgent()->doOptimizedConsensus(_daProof->getBlockId(), getLastCommittedBlockTimeStamp().getS())) {
+        // when we do optimized block consensus only the previous winner
+        // proposes and provides da proof
+        // proposals from other nodes, if sent made by mistake, are ignored
+        auto lastWinner = getOptimizerAgent()->getPreviousWinner( _daProof->getBlockId() );
+        if (_daProof->getProposerIndex() == lastWinner) {
+            getNode()->getDaProofDB()->addDAProof(_daProof);
+            pv = make_shared<BooleanProposalVector>(getNodeCount(), lastWinner);
+        }
+    } else {
+        // do things regular way
+        // the binary proposal vector is formed and the consensus is started when
+        // 2/3 of nodes  (11) submit a da proof
+        pv = getNode()->getDaProofDB()->addDAProof(_daProof);
+    }
+    return pv;
+}
+
+// returns true if fastConsensusPatch ie enabled
+bool Schain::fastConsensusPatchEnabled(uint64_t _blockTimeStampSec ) {
+    return fastConsensusPatchTimestamp != 0 && _blockTimeStampSec >= fastConsensusPatchTimestamp;
+}
+
+// macro to set patchstamp variable from connfig
+#define SET_TIMESTAMP_FROM_CONFIG(__TIMESTAMP_NAME__) \
+    { \
+        auto& timestamps = getNode()->getPatchTimestamps(); \
+        if (timestamps.count(#__TIMESTAMP_NAME__) > 0) { \
+            __TIMESTAMP_NAME__ = timestamps.at(#__TIMESTAMP_NAME__); \
+        } \
+    }
+
+// set all timestamp values from config
+void Schain::setTimeStampValuesFromConfig() {
+    SET_TIMESTAMP_FROM_CONFIG(verifyDaSigsPatchTimestamp)
+    SET_TIMESTAMP_FROM_CONFIG(fastConsensusPatchTimestamp)
+    SET_TIMESTAMP_FROM_CONFIG(verifyBlsSyncPatchTimestamp)
+}

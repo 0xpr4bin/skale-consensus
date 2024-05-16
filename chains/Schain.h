@@ -61,7 +61,7 @@ class CatchupServerAgent;
 class MonitoringAgent;
 class TimeoutAgent;
 class StuckDetectionAgent;
-
+class OptimizerAgent;
 
 class BlockProposalServerAgent;
 
@@ -136,6 +136,7 @@ class Schain : public Agent {
 
     ptr< OracleResultAssemblyAgent > oracleResultAssemblyAgent;
 
+    ptr<OptimizerAgent> optimizerAgent;
 
     ptr< IO > io;
 
@@ -175,9 +176,9 @@ class Schain : public Agent {
 
     ptr< NodeInfo > thisNodeInfo = nullptr;
 
-    uint64_t verifyDaSigsPatchTimestampS = 0;
-
-    uint64_t verifyBlsSyncPatchTimestampS = 0;
+    uint64_t verifyDaSigsPatchTimestamp = 0;
+    uint64_t fastConsensusPatchTimestamp = 0;
+    uint64_t verifyBlsSyncPatchTimestamp = 0;
 
     // If a BlockError analyzer is added to the queue
     // its analyze(CommittedBlock _block) function will be run on commit
@@ -346,7 +347,7 @@ public:
 
     ptr< CryptoManager > getCryptoManager() const;
 
-    uint64_t getVerifyDaSigsPatchTimestampS() const;
+    uint64_t getVerifyDaSigsPatchTimeStamp() const;
 
     uint64_t getVerifyBlsSyncPatchTimestampS() const;
 
@@ -394,4 +395,12 @@ public:
 
     const ptr<CatchupClientAgent> &getCatchupClientAgent() const;
 
+    ptr< OptimizerAgent > getOptimizerAgent() const;
+
+    bool fastConsensusPatchEnabled( uint64_t _blockTimeStampSec );
+
+    void setTimeStampValuesFromConfig();
+
+    ptr<BooleanProposalVector>
+    addDAProofToDBAndCalculateProposalVectorIfItsTimeToStartBinaryConsensus(const ptr<DAProof> &_daProof);
 };

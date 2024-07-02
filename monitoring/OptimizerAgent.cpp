@@ -74,7 +74,15 @@ uint64_t OptimizerAgent::getPriorityLeaderForBlock( block_id& _blockID ) {
         seed = *( ( uint64_t* ) previousBlock->getHash().data() );
     }
 
-    auto lastBlockStampS = getSchain()->getLastCommittedBlockTimeStamp().getS();
+    uint lastBlockStampS = 0;
+
+    // note that last block may concurrently change through catchup
+    // so here we specifically request the time stamp of the block
+    // previous to the block if for which we are doing consensus
+    if (_blockID > 1) {
+        lastBlockStampS = getSchain()->getBlock(_blockID - 1)->getTimeStampS();
+    }
+
 
     if ( getSchain()->fastConsensusPatchEnabled( lastBlockStampS ) ) {
         // in the new scheme priority leader changes in Round Robin fashion for normal consensus

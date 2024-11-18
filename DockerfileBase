@@ -1,12 +1,12 @@
 FROM ubuntu:22.04
 
-RUN apt-get install -y software-properties-common
+RUN apt-get install -y build-essential software-properties-common
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt-get update
 RUN sudo apt-add-repository universe; apt-get update; \
     apt-get install -yq libprocps-dev gcc-11 g++-11 valgrind gawk sed libffi-dev ccache libgoogle-perftools-dev \
     yasm texinfo autotools-dev automake python3 python3-pip \
-    cmake libtool build-essential pkg-config autoconf wget git \
+    cmake libtool pkg-config autoconf wget git \
     libhiredis-dev redis-server openssl libssl-dev doxygen idn2 libgcrypt20-dev
     # python python-pip
 

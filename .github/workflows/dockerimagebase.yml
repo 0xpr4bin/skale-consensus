@@ -59,16 +59,16 @@ jobs:
     #       sudo rm -rf /usr/local/lib/android >/dev/null 2>&1 && \
     #       docker rmi $(docker image ls -aq) >/dev/null 2>&1
 
-    - name: install cmake
-      run: |
-        wget --no-check-certificate https://cmake.org/files/v3.10/cmake-3.10.0-Linux-x86_64.sh && \
-        chmod +x cmake-3.10.0-Linux-x86_64.sh && \
-        ./cmake-3.10.0-Linux-x86_64.sh --skip-license --include-subdir && \
-        sudo ln -sf `pwd`/cmake-3.10.0-Linux-x86_64/bin/* /usr/local/bin
+      - name: install cmake
+        run: |
+          wget --no-check-certificate https://cmake.org/files/v3.21/cmake-3.21.0-linux-x86_64.sh && \
+          chmod +x cmake-3.21.0-linux-x86_64.sh && \
+          ./cmake-3.21.0-linux-x86_64.sh --skip-license --include-subdir && \
+          sudo ln -sf `pwd`/cmake-3.21.0-linux-x86_64/bin/* /usr/local/bin
 
     - name: install packages
       run: |
-        sudo apt-get install -y software-properties-common; sudo apt-add-repository universe; \
+        sudo apt-get install -y software-properties-common; \
         sudo apt-get update; sudo apt-get install -y software-properties-common apt-utils libprocps-dev \
         gcc-11 g++-11 valgrind gawk sed libffi-dev ccache libgoogle-perftools-dev yasm texinfo \
         autotools-dev autogen automake autoconf m4 shtool pkg-config nasm \

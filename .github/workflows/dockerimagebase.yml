@@ -8,12 +8,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
-      - name: install cmake
-        run: |
-          wget --no-check-certificate https://cmake.org/files/v3.21/cmake-3.21.0-linux-x86_64.sh && \
-          chmod +x cmake-3.21.0-linux-x86_64.sh && \
-          ./cmake-3.21.0-linux-x86_64.sh --skip-license --include-subdir && \
-          sudo ln -sf `pwd`/cmake-3.21.0-linux-x86_64/bin/* /usr/local/bin
+    - name: install cmake
+      run: |
+        wget --no-check-certificate https://cmake.org/files/v3.21/cmake-3.21.0-linux-x86_64.sh && \
+        chmod +x cmake-3.21.0-linux-x86_64.sh && \
+        ./cmake-3.21.0-linux-x86_64.sh --skip-license --include-subdir && \
+        sudo ln -sf `pwd`/cmake-3.21.0-linux-x86_64/bin/* /usr/local/bin
 
     - name: install packages
       run: |

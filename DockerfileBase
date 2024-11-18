@@ -9,7 +9,7 @@ RUN sudo apt-add-repository universe; apt-get update; \
     yasm texinfo autotools-dev automake python3 python3-pip \
     cmake libtool pkg-config autoconf wget git \
     libhiredis-dev redis-server openssl libssl-dev doxygen idn2 libgcrypt20-dev \
-    libargtable2-dev libgnutils28-dev
+    libargtable2-dev libgnutls28-dev
     # python python-pip
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11

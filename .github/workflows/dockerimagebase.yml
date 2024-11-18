@@ -51,16 +51,17 @@ jobs:
         which gcov-tool
         gcov-tool --version
 
-    - name: Login to docker
-      env:
-        GITHUB_TOKEN: ${{ secrets.DOCKER_SECRET }}
-      run: docker login -u skalelabsci -p ${GITHUB_TOKEN}
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: submodule update
       run: git submodule update --init --recursive
 
     - name: Build the Docker image(base)
       run: docker build . --file DockerfileBase --tag skalenetwork/consensust_base:latest
+    
+    - name: Login to docker
+      env:
+        GITHUB_TOKEN: ${{ secrets.DOCKER_SECRET }}
+      run: docker login -u skalelabsci -p ${GITHUB_TOKEN}
 
     - name: push docker image
       run:  docker push skalenetwork/consensust_base:latest

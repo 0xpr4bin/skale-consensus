@@ -1,12 +1,11 @@
 FROM skalenetwork/consensust_base:latest
 
 RUN apt-get update
-RUN apt-get install -yq software-properties-common
+RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt-get install -y software-properties-common; sudo apt-add-repository universe; apt-get update; \
-    apt-get install -yq libprocps-dev gcc-11 g++-11 valgrind gawk sed libffi-dev ccache libgoogle-perftools-dev \
-    flex bison yasm texinfo autotools-dev automake \
-    python3 python3-pip \
+    apt-get install -y libprocps-dev gcc-11 g++-11 valgrind gawk sed libffi-dev ccache libgoogle-perftools-dev \
+    yasm texinfo autotools-dev automake python3 python3-pip \
     libtool build-essential pkg-config autoconf wget git libargtable2-dev \
     libmicrohttpd-dev libhiredis-dev redis-server openssl libssl-dev doxygen idn2 \
     libgcrypt20-dev

@@ -78,12 +78,13 @@ jobs:
         mkdir -p ~/.docker/cli-plugins/
         curl -SL https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
         chmod +x ~/.docker/cli-plugins/docker-compose
+        docker-compose version
 
     - name: try docker compose
       run: |
         cd sgxwallet/run_sgx_sim
         echo " --------------------------- stopping sgx wallet ------------------------------------------------------------------------------------------------------ "
-        docker-compose down
+        docker compose down
         echo " --------------------------- fixing sgx wallets docker config ----------------------------------------------------------------------------------------- "
         mv docker-compose.yml docker-compose.yml.old-previous || true
         echo "version: '3'" > docker-compose.yml
@@ -106,7 +107,7 @@ jobs:
         echo "    restart: unless-stopped" >> docker-compose.yml
         echo "    command: -s -y -V -d " >> docker-compose.yml
         echo " --------------------------- pulling sgx wallet ------------------------------------------------------------------------------------------------------- "
-        docker-compose pull
+        docker compose pull
 
     - name: install cmake
       run: |

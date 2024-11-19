@@ -35,7 +35,6 @@ COPY . /consensust
 WORKDIR /consensust
 
 RUN cd deps && ./build.sh
-# RUN cd scripts && ./build.py Debug
 RUN ccache -M 20G
 RUN mkdir -p "${HOME}"/.hunter/_Base/Download/crc32c/1.0.5/dc7fa8c/ && \
     wget -O "${HOME}"/.hunter/_Base/Download/crc32c/1.0.5/dc7fa8c/hunter-1.0.5.tar.gz https://github.com/hunter-packages/crc32c/archive/refs/tags/hunter-1.0.5.tar.gz 

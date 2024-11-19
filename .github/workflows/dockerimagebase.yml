@@ -60,8 +60,9 @@ jobs:
     
     - name: Login to docker
       env:
-        GITHUB_TOKEN: ${{ secrets.DOCKER_SECRET }}
-      run: docker login -u skalelabsci -p ${GITHUB_TOKEN}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
 
     - name: push docker image
       run:  docker push skalenetwork/consensust_base:latest

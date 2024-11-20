@@ -377,12 +377,12 @@ then
 	else
 		if [ "$UNIX_SYSTEM_NAME" = "Linux" ];
 		then
-			export CC=$(which gcc-7)
+                        export CC=$(which gcc-11)
 			if [ -z "${CC}" ];
 			then
 				export CC=$(which gcc)
 			fi
-			export CXX=$(which g++-7)
+                        export CXX=$(which g++-11)
 			if [ -z "${CXX}" ];
 			then
 				export CXX=$(which g++)
